@@ -26,6 +26,11 @@ func main() {
 
 	defer res.Body.Close()
 
+	if res.StatusCode != 200 {
+		fmt.Println("Could not define", word)
+		return
+	}
+
 	var body []DictRes
 	err = json.NewDecoder(res.Body).Decode(&body)
 	if err != nil {

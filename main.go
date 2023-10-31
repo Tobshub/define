@@ -17,6 +17,22 @@ func main() {
 
 	word := os.Args[1]
 	fmt.Printf("Define: %s\n", word)
+
+	res := fetch(word)
+	render(res)
+	SaveInCache(res.Word, res)
+}
+
+func fetch(word string) *DictRes {
+	if len(word) == 0 {
+		panic("You must provide a word")
+	}
+
+	cachedDict := GetFromCache(word)
+	if cachedDict != nil {
+		return cachedDict
+	}
+
 	res, err := http.Get(fmt.Sprintf(
 		"https://api.dictionaryapi.dev/api/v2/entries/en/%s", word,
 	))
@@ -28,7 +44,7 @@ func main() {
 
 	if res.StatusCode != 200 {
 		fmt.Println("Could not define", word)
-		return
+		os.Exit(1)
 	}
 
 	var body []DictRes
@@ -37,7 +53,7 @@ func main() {
 		panic(err)
 	}
 
-	render(&body[0])
+	return &body[0]
 }
 
 func render(dict *DictRes) {

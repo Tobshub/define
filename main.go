@@ -57,6 +57,10 @@ func fetch(word string) *DictRes {
 }
 
 func render(dict *DictRes) {
+	if dict.IsCached {
+		fmt.Println("(cached)")
+	}
+
 	PrintIfNotEmpty(dict.Phonetic)
 	PrintIfNotEmpty(dict.Origin)
 

@@ -19,8 +19,10 @@ func main() {
 	fmt.Printf("Define: %s\n", word)
 
 	res := fetch(word)
-	render(res)
-	SaveInCache(res.Word, res)
+	if res != nil {
+		render(res)
+		SaveInCache(res.Word, res)
+	}
 }
 
 func fetch(word string) *DictRes {
@@ -43,8 +45,15 @@ func fetch(word string) *DictRes {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		fmt.Println("Could not define", word)
-		os.Exit(1)
+		switch res.StatusCode {
+		case 404:
+			fmt.Println("Could not define", word)
+		case 429:
+			fmt.Println("Slow your roll buddy. Try again in a sec")
+		default:
+			fmt.Println("Something went wrong. Try again in a sec")
+		}
+		return nil
 	}
 
 	var body []DictRes

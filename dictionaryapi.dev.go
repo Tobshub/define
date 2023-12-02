@@ -5,7 +5,7 @@ type DictRes struct {
 	Phonetic string        `json:"phonetic"`
 	Origin   string        `json:"origin"`
 	Meanings []DictMeaning `json:"meanings"`
-	IsCached bool
+	Error    string        `json:"error"`
 }
 
 type DictMeaning struct {

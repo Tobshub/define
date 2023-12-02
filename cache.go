@@ -40,7 +40,6 @@ func GetFromCache(word string) *DictRes {
 	if !ok {
 		return nil
 	}
-	dict.IsCached = true
 	return &dict
 }
 

@@ -18,26 +18,25 @@ func main() {
 	word := os.Args[1]
 	fmt.Printf("Define: %s\n", word)
 
-	res := fetch(word)
+	res := FetchDict(word)
 	if res != nil {
-		render(res)
+		RenderDict(res)
 		SaveInCache(res.Word, res)
 	}
 }
 
-func fetch(word string) *DictRes {
+func FetchDict(word string) *DictRes {
 	if len(word) == 0 {
 		panic("You must provide a word")
 	}
 
 	cachedDict := GetFromCache(word)
 	if cachedDict != nil {
+		fmt.Println("(cached)")
 		return cachedDict
 	}
 
-	res, err := http.Get(fmt.Sprintf(
-		"https://api.dictionaryapi.dev/api/v2/entries/en/%s", word,
-	))
+	res, err := http.Get(fmt.Sprintf("https://api.dictionaryapi.dev/api/v2/entries/en/%s", word))
 	if err != nil {
 		panic(err)
 	}
@@ -47,11 +46,11 @@ func fetch(word string) *DictRes {
 	if res.StatusCode != 200 {
 		switch res.StatusCode {
 		case 404:
-			fmt.Println("Could not define", word)
+			return &DictRes{Word: word, Error: "Could not define: Not Found"}
 		case 429:
-			fmt.Println("Slow your roll buddy. Try again in a sec")
+			fmt.Println("Could not define: Too Many Requests")
 		default:
-			fmt.Println("Something went wrong. Try again in a sec")
+			fmt.Println("Could not define: Something Went Wrong (Try again later)")
 		}
 		return nil
 	}
@@ -65,9 +64,10 @@ func fetch(word string) *DictRes {
 	return &body[0]
 }
 
-func render(dict *DictRes) {
-	if dict.IsCached {
-		fmt.Println("(cached)")
+func RenderDict(dict *DictRes) {
+	if dict.Error != "" {
+		fmt.Println(dict.Error)
+		return
 	}
 
 	PrintIfNotEmpty(dict.Phonetic)

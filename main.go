@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,31 +10,36 @@ import (
 )
 
 func main() {
-	args := os.Args
+	noCache := flag.Bool("no-cache", false, "Always fetch from API")
+	flag.Parse()
+
+	args := RemoveFlags(os.Args)
 	if len(args) < 2 {
 		fmt.Println("You must provide a word")
 		return
 	}
 
-	word := os.Args[1]
+	word := os.Args[len(os.Args)-1]
 	fmt.Printf("Define: %s\n", word)
 
-	res := FetchDict(word)
+	res := FetchDict(word, *noCache)
 	if res != nil {
 		RenderDict(res)
 		SaveInCache(res.Word, res)
 	}
 }
 
-func FetchDict(word string) *DictRes {
+func FetchDict(word string, noCache bool) *DictRes {
 	if len(word) == 0 {
 		panic("You must provide a word")
 	}
 
-	cachedDict := GetFromCache(word)
-	if cachedDict != nil {
-		fmt.Println("(cached)")
-		return cachedDict
+	if !noCache {
+		cachedDict := GetFromCache(word)
+		if cachedDict != nil {
+			fmt.Println("(cached)")
+			return cachedDict
+		}
 	}
 
 	res, err := http.Get(fmt.Sprintf("https://api.dictionaryapi.dev/api/v2/entries/en/%s", word))
@@ -95,4 +101,14 @@ func PrintIfNotEmpty(s string, prefix ...string) {
 		}
 		fmt.Println(s)
 	}
+}
+
+func RemoveFlags(args []string) []string {
+	res := make([]string, 0, len(args))
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			res = append(res, arg)
+		}
+	}
+	return res
 }
